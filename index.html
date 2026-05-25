@@ -12,418 +12,233 @@
 <title>ハンドボール動画ナビ</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 15px; background: #f8f7f4; color: #1a1a1a; padding: 1.5rem; max-width: 800px; margin: 0 auto; }
-  h1 { font-size: 18px; font-weight: 500; margin-bottom: 1rem; color: #1a1a1a; }
-  label { font-size: 12px; color: #666; display: block; margin-bottom: 5px; }
-  input[type="search"] { width: 100%; padding: 12px 14px; font-size: 16px; border: 0.5px solid #ccc; border-radius: 10px; background: #fff; color: #1a1a1a; margin-bottom: 1rem; -webkit-appearance: none; }
-  input[type="search"]:focus { outline: none; border-color: #1a6bbd; }
-  select { width: 100%; padding: 8px 10px; font-size: 14px; border: 0.5px solid #ccc; border-radius: 8px; background: #fff; color: #1a1a1a; appearance: none; cursor: pointer; }
-  select:disabled { background: #f0f0f0; color: #999; cursor: default; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 1rem; }
-  .result-card { background: #f0ede8; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.25rem; border: 0.5px solid #ddd; }
-  .result-card p.sub { font-size: 12px; color: #666; margin-bottom: 5px; }
-  .result-card p.main { font-size: 15px; font-weight: 500; margin-bottom: 12px; }
-  .btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
-  a.open-btn { font-size: 13px; padding: 6px 12px; border-radius: 8px; border: 0.5px solid #8ab8e0; background: #fff; color: #1a6bbd; text-decoration: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
-  a.open-btn:hover { background: #e8f0fa; }
-  details { margin-bottom: 1rem; }
-  details summary { font-size: 14px; color: #666; cursor: pointer; padding: 8px 0; user-select: none; list-style: none; }
-  details summary::-webkit-details-marker { display: none; }
-  details summary::before { content: '▶ '; font-size: 10px; transition: transform 0.15s; display: inline-block; }
-  details[open] summary::before { transform: rotate(90deg); }
-  #search-results { margin-bottom: 1.25rem; }
-  .hit { background: #fff; border: 0.5px solid #ddd; border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; text-decoration: none; color: inherit; display: block; }
-  .hit:hover { background: #f5f0e8; border-color: #8ab8e0; }
-  .hit .hit-main { font-size: 15px; font-weight: 500; color: #1a1a1a; margin-bottom: 3px; }
-  .hit .hit-sub { font-size: 12px; color: #666; }
-  .hit-empty { font-size: 13px; color: #999; padding: 12px 0; text-align: center; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 15px; background: #f8f7f4; color: #1a1a1a; padding: 1rem; max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 18px; font-weight: 500; margin-bottom: 1rem; }
+  input[type="search"] { width: 100%; padding: 12px 14px; font-size: 16px; border: 0.5px solid #ccc; border-radius: 10px; background: #fff; color: #1a1a1a; margin-bottom: 0.75rem; -webkit-appearance: none; }
+  input[type="search"]:focus { outline: none; border-color: #e85d29; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem; }
+  .chip { font-size: 13px; padding: 6px 12px; border-radius: 999px; border: 0.5px solid #ccc; background: #fff; color: #444; cursor: pointer; user-select: none; }
+  .chip.active { background: #e85d29; border-color: #e85d29; color: #fff; }
+  .chip-label { font-size: 11px; color: #888; margin-right: 6px; align-self: center; }
+  .status { font-size: 12px; color: #888; margin-bottom: 0.75rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+  .card { background: #fff; border: 0.5px solid #ddd; border-radius: 10px; overflow: hidden; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; display: flex; flex-direction: column; }
+  .card:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .card .thumb-wrap { position: relative; aspect-ratio: 16/9; background: #eee; overflow: hidden; }
+  .card .thumb { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .card .play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 32px; color: #fff; text-shadow: 0 0 10px rgba(0,0,0,0.6); opacity: 0.85; }
+  .card-body { padding: 8px 10px; flex: 1; display: flex; flex-direction: column; }
+  .card-breadcrumb { font-size: 11px; color: #888; margin-bottom: 4px; }
+  .card-title { font-size: 13px; color: #333; line-height: 1.4; flex: 1; }
+  .empty { font-size: 13px; color: #999; text-align: center; padding: 2rem 0; }
+  .loading { font-size: 13px; color: #888; text-align: center; padding: 2rem 0; }
+  /* modal */
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; display: none; align-items: center; justify-content: center; padding: 1rem; }
+  .modal-bg.show { display: flex; }
+  .modal { background: #000; border-radius: 10px; width: 100%; max-width: 900px; position: relative; }
+  .modal-close { position: absolute; top: -36px; right: 0; font-size: 22px; color: #fff; cursor: pointer; background: none; border: none; padding: 4px 10px; }
+  .modal-info { background: #1a1a1a; color: #ddd; padding: 10px 14px; font-size: 13px; border-radius: 0 0 10px 10px; }
+  .modal-breadcrumb { font-size: 11px; color: #999; margin-bottom: 4px; }
+  .modal-title { font-size: 14px; line-height: 1.5; }
+  .modal-player { aspect-ratio: 16/9; width: 100%; }
+  .modal-player iframe { width: 100%; height: 100%; border: 0; border-radius: 10px 10px 0 0; }
 </style>
 </head>
 <body>
 
 <h1>ハンドボール動画ナビ</h1>
 
-<input type="search" id="search-input" placeholder="検索（例：ブロック、ジャンプシュート、フェイント）" autocomplete="off">
+<input type="search" id="q" placeholder="検索（例：シュート、ブロック、フェイント）" autocomplete="off">
 
-<div id="search-results"></div>
-
-<details id="browse">
-<summary>カテゴリから探す</summary>
-
-<div class="grid">
-  <div>
-    <label>年齢層</label>
-    <select id="sel-age"></select>
-  </div>
-  <div>
-    <label>カテゴリ</label>
-    <select id="sel-cat"></select>
-  </div>
-  <div>
-    <label>内容</label>
-    <select id="sel-sub"></select>
-  </div>
-  <div>
-    <label>動画</label>
-    <select id="sel-vid"></select>
-  </div>
+<div class="chips" id="age-chips">
+  <span class="chip-label">年齢</span>
 </div>
 
-<div class="result-card">
-  <p class="sub">選択中</p>
-  <p class="main" id="res-label">—</p>
-  <div class="btn-row">
-    <a class="open-btn" id="res-link" href="#" target="_blank">↗ 動画ページを開く</a>
+<div class="chips" id="subj-chips">
+  <span class="chip-label">分野</span>
+</div>
+
+<div class="status" id="status">読み込み中…</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="modal-bg" id="modal" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal()">✕ 閉じる</button>
+    <div class="modal-player" id="player"></div>
+    <div class="modal-info">
+      <div class="modal-breadcrumb" id="modal-bc"></div>
+      <div class="modal-title" id="modal-title"></div>
+    </div>
   </div>
 </div>
-</details>
 
 <script>
-const BASE = 'https://www.ovelsesbanken.no/ovelser';
+const LEVELS = [['16-20','高校 (16〜20)'],['13-15','中学 (13〜15)'],['10-12','小高 (10〜12)'],['6-9','小低 (6〜9)']];
 
-const TREE = {
-  '16-20': {
-    label: '16〜20歳',
-    cats: {
-      forsvar: { label: '守備', subs: {
-        'teknikk': { label: '技術', vids: [
-          ['takle','タックル（ボール奪取）'],['snappe','スナップ（引っ張り）'],['finte','フェイント対応'],
-          ['blokke','ブロック'],['stenge','閉鎖（スペース封鎖）'],['sikre','カバー'],
-          ['forflytte','移動・ステップ'],['hjelpe','ヘルプDF'],['presse','プレス']
-        ]},
-        'spill-og-motspill-1-mot-1': { label: '1対1', vids: [
-          ['midtsektor','センターゾーン'],['sidesektor','サイドゾーン'],['hele-banen','全コート']
-        ]},
-        'spill-og-motspill-i-sma-grupper': { label: '小グループ', vids: [
-          ['midtsektor','センターゾーン'],['sidesektor','サイドゾーン'],['hele-banen','全コート']
-        ]},
-        'spill-og-motspill-i-store-grupper': { label: '大グループ', vids: [
-          ['midtsektor','センターゾーン'],['sidesektor','サイドゾーン'],['hele-banen','全コート']
-        ]},
-        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
-        'fysiske-forutsetninger': { label: 'フィジカル基礎', vids: null },
-      }},
-      angrep: { label: '攻撃', subs: {
-        'teknikk': { label: '技術', vids: [
-          ['ballbehandling','ボールハンドリング'],['kast-og-mottak','パス＆キャッチ'],
-          ['skudd-fra-gulvet','フロアシュート'],['skudd-fra-lufta','ジャンプシュート'],
-          ['finte','フェイント'],['innspillsteknikk','インカット技術'],
-          ['utspillsteknikk','アウトカット技術'],['oppspill','セットアップ'],
-          ['kantskudd','ウィングシュート'],['linjeskudd','ラインシュート'],
-          ['sperreteknik','スクリーン技術'],['kast-og-forflytning','パス＆ムーブ'],
-          ['overgangsspill','トランジション'],['krysningsspill','クロスプレー']
-        ]},
-        'spill-og-motspill-1-mot-1': { label: '1対1', vids: [
-          ['midtsektor','センターゾーン'],['sidesektor','サイドゾーン'],['hele-banen','全コート']
-        ]},
-        'spill-og-motspill-i-sma-grupper': { label: '小グループ', vids: [
-          ['midtsektor','センターゾーン'],['sidesektor','サイドゾーン'],['hele-banen','全コート']
-        ]},
-        'spill-og-motspill-i-store-grupper': { label: '大グループ', vids: [
-          ['midtsektor','センターゾーン'],['sidesektor','サイドゾーン'],['hele-banen','全コート']
-        ]},
-        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
-        'fysiske-forutsetninger': { label: 'フィジカル基礎', vids: null },
-      }},
-      'kontra-retur': { label: 'カウンター・リターン', subs: {
-        'teknikk': { label: '技術', vids: null },
-        'spill-og-motspill-1-mot-1': { label: '1対1', vids: [
-          ['midtsektor','センターゾーン'],['sidesektor','サイドゾーン'],['hele-banen','全コート']
-        ]},
-        'spill-og-motspill-i-sma-grupper': { label: '小グループ', vids: [
-          ['midtsektor','センターゾーン'],['sidesektor','サイドゾーン'],['hele-banen','全コート']
-        ]},
-        'spill-og-motspill-i-store-grupper': { label: '大グループ', vids: [
-          ['midtsektor','センターゾーン'],['sidesektor','サイドゾーン'],['hele-banen','全コート']
-        ]},
-        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
-        'fysiske-forutsetninger': { label: 'フィジカル基礎', vids: null },
-      }},
-      malvakt: { label: 'GK', subs: {
-        'grunnleggende-teknikk-og-taktikk': { label: '基礎技術・戦術', vids: [
-          ['distanse','距離感・ポジション'],['kant','ウィング対応'],
-          ['naerskudd','至近距離シュート対応'],['igangsetting','カウンター開始']
-        ]},
-        'kompleks-teknikk-og-taktikk': { label: '応用技術・戦術', vids: [
-          ['flerskuddovelser','連続シュート対応'],['valgovelser','判断系練習'],
-          ['spillesituasjoner-med-forsvar','DFとの連携']
-        ]},
-        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
-        'fysiske-forutsetninger': { label: 'フィジカル基礎', vids: null },
-      }},
-      fysisk: { label: 'フィジカル', subs: {
-        'trening-med-utstyr': { label: '器具あり', vids: null },
-        'trening-uten-utstyr': { label: '器具なし', vids: null },
-        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
-      }},
-      'mentalt-og-sosialt': { label: 'メンタル・理論', subs: {
-        'teori': { label: '理論', vids: [
-          ['indre-dialog','内的対話'],['selvtillit','自信'],['maalsetning','目標設定'],
-          ['visualisering','イメージトレーニング'],['konsentrasjon','集中力'],
-          ['stressmestring','ストレスマネジメント'],['kamp-og-treningsforberedelser','試合・練習準備'],
-          ['motivasjon','モチベーション'],['spenningsregulering','覚醒レベル調整'],
-          ['lagbygging','チームビルディング']
-        ]},
-      }},
-    }
-  },
-  '13-15': {
-    label: '13〜15歳',
-    cats: {
-      forsvar: { label: '守備', subs: {
-        'teknikk': { label: '技術', vids: null },
-        'spill-og-motspill-1-mot-1': { label: '1対1', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
-        'spill-og-motspill-i-sma-grupper': { label: '小グループ', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
-        'spill-og-motspill-i-store-grupper': { label: '大グループ', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
-        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
-        'fysiske-forutsetninger': { label: 'フィジカル基礎', vids: null },
-      }},
-      angrep: { label: '攻撃', subs: {
-        'teknikk': { label: '技術', vids: null },
-        'spill-og-motspill-1-mot-1': { label: '1対1', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
-        'spill-og-motspill-i-sma-grupper': { label: '小グループ', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
-        'spill-og-motspill-i-store-grupper': { label: '大グループ', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
-        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
-        'fysiske-forutsetninger': { label: 'フィジカル基礎', vids: null },
-      }},
-      'kontra-retur': { label: 'カウンター', subs: {
-        'teknikk': { label: '技術', vids: null },
-        'spill-og-motspill-1-mot-1': { label: '1対1', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
-        'spill-og-motspill-i-sma-grupper': { label: '小グループ', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
-        'spill-og-motspill-i-store-grupper': { label: '大グループ', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
-        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
-        'fysiske-forutsetninger': { label: 'フィジカル基礎', vids: null },
-      }},
-      malvakt: { label: 'GK', subs: {
-        'grunnleggende-teknikk-og-taktikk': { label: '基礎技術・戦術', vids: null },
-        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
-        'fysiske-forutsetninger': { label: 'フィジカル基礎', vids: null },
-      }},
-      fysisk: { label: 'フィジカル', subs: {
-        'trening-med-utstyr': { label: '器具あり', vids: null },
-        'trening-uten-utstyr': { label: '器具なし', vids: null },
-        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
-      }},
-      'mentalt-og-sosialt': { label: 'メンタル・理論', subs: {
-        'teori': { label: '理論', vids: null },
-        'praksis': { label: '実践', vids: null },
-      }},
-    }
-  },
-  '10-12': {
-    label: '10〜12歳',
-    cats: {
-      forsvar: { label: '守備', subs: {
-        'teknikk': { label: '技術', vids: null },
-        'spill-og-motspill-1-mot-1': { label: '1対1', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
-        'spill-og-motspill-i-sma-grupper': { label: '小グループ', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
-        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
-        'fysiske-forutsetninger': { label: 'フィジカル基礎', vids: null },
-      }},
-      angrep: { label: '攻撃', subs: {
-        'teknikk': { label: '技術', vids: null },
-        'spill-og-motspill-1-mot-1': { label: '1対1', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
-        'spill-og-motspill-i-sma-grupper': { label: '小グループ', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
-        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
-        'fysiske-forutsetninger': { label: 'フィジカル基礎', vids: null },
-      }},
-      'kontra-retur': { label: 'カウンター', subs: {
-        'teknikk': { label: '技術', vids: null },
-        'spill-og-motspill-1-mot-1': { label: '1対1', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
-        'spill-og-motspill-i-sma-grupper': { label: '小グループ', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
-        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
-        'fysiske-forutsetninger': { label: 'フィジカル基礎', vids: null },
-      }},
-      malvakt: { label: 'GK', subs: {
-        'motorikk-og-koordinasjon': { label: '運動・コーディネーション', vids: null },
-        'fysiske-forutsetninger': { label: 'フィジカル基礎', vids: null },
-      }},
-      fysisk: { label: 'フィジカル', subs: {
-        'trening-med-utstyr': { label: '器具あり', vids: null },
-        'trening-uten-utstyr': { label: '器具なし', vids: null },
-        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
-      }},
-      'mentalt-og-sosialt': { label: 'メンタル・理論', subs: {
-        'praksis': { label: '実践', vids: null },
-      }},
-    }
-  },
-  '6-9': {
-    label: '6〜9歳',
-    cats: {
-      forsvar: { label: '守備', subs: {
-        'teknikk': { label: '技術', vids: null },
-        'spill-og-motspill-1-mot-1': { label: '1対1', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
-        'spill-og-motspill-i-sma-grupper': { label: '小グループ', vids: null },
-        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
-        'fysiske-forutsetninger': { label: 'フィジカル基礎', vids: null },
-      }},
-      angrep: { label: '攻撃', subs: {
-        'teknikk': { label: '技術', vids: null },
-        'spill-og-motspill-1-mot-1': { label: '1対1', vids: null },
-        'spill-og-motspill-i-sma-grupper': { label: '小グループ', vids: null },
-        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
-        'fysiske-forutsetninger': { label: 'フィジカル基礎', vids: null },
-      }},
-      'kontra-retur': { label: 'カウンター', subs: {
-        'teknikk': { label: '技術', vids: null },
-        'spill-og-motspill-1-mot-1': { label: '1対1', vids: null },
-        'spill-og-motspill-i-sma-grupper': { label: '小グループ', vids: null },
-        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
-        'fysiske-forutsetninger': { label: 'フィジカル基礎', vids: null },
-      }},
-      malvakt: { label: 'GK', subs: {
-        'motorikk-og-koordinasjon': { label: '運動・コーディネーション', vids: null },
-      }},
-      fysisk: { label: 'フィジカル', subs: {
-        'trening-med-utstyr': { label: '器具あり', vids: null },
-        'trening-uten-utstyr': { label: '器具なし', vids: null },
-        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
-      }},
-      'mentalt-og-sosialt': { label: 'メンタル・理論', subs: {
-        'praksis': { label: '実践', vids: null },
-      }},
-    }
-  },
+const SUBJ = {
+  'forsvar': '守備',
+  'angrep': '攻撃',
+  'kontra-retur': 'カウンター',
+  'malvakt': 'GK',
+  'fysisk': 'フィジカル',
+  'mentalt-og-sosialt': 'メンタル・理論',
 };
 
-function populateAge() {
-  const s = document.getElementById('sel-age');
-  Object.entries(TREE).forEach(([k,v]) => {
-    const o = document.createElement('option'); o.value=k; o.textContent=v.label; s.appendChild(o);
-  });
+const CAT = {
+  'teknikk': '技術',
+  'spill-og-motspill-1-mot-1': '1対1',
+  'spill-og-motspill-i-sma-grupper': '小グループ',
+  'spill-og-motspill-i-store-grupper': '大グループ',
+  'leker-og-oppvarming': 'ウォームアップ',
+  'fysiske-forutsetninger': 'フィジカル基礎',
+  'grunnleggende-teknikk-og-taktikk': '基礎技術・戦術',
+  'kompleks-teknikk-og-taktikk': '応用技術・戦術',
+  'trening-med-utstyr': '器具あり',
+  'trening-uten-utstyr': '器具なし',
+  'praksis': '実践',
+  'teori': '理論',
+  'motorikk-og-koordinasjon': '運動・コーディネーション',
+};
+
+const TECH = {
+  'takle': 'タックル','snappe': 'スナップ','finte': 'フェイント','blokke': 'ブロック',
+  'stenge': '閉鎖','sikre': 'カバー','forflytte': '移動・ステップ','hjelpe': 'ヘルプDF','presse': 'プレス',
+  'midtsektor': 'センターゾーン','sidesektor': 'サイドゾーン','hele-banen': '全コート',
+  'ballbehandling': 'ボールハンドリング','kast-og-mottak': 'パス＆キャッチ',
+  'skudd-fra-gulvet': 'フロアシュート','skudd-fra-lufta': 'ジャンプシュート',
+  'innspillsteknikk': 'インカット技術','utspillsteknikk': 'アウトカット技術','oppspill': 'セットアップ',
+  'kantskudd': 'ウィングシュート','linjeskudd': 'ラインシュート','sperreteknik': 'スクリーン技術',
+  'kast-og-forflytning': 'パス＆ムーブ','overgangsspill': 'トランジション','krysningsspill': 'クロスプレー',
+  'distanse': '距離感・ポジション','kant': 'ウィング対応','naerskudd': '至近距離シュート対応',
+  'igangsetting': 'カウンター開始','flerskuddovelser': '連続シュート対応','valgovelser': '判断系練習',
+  'spillesituasjoner-med-forsvar': 'DFとの連携',
+  'indre-dialog': '内的対話','selvtillit': '自信','maalsetning': '目標設定',
+  'visualisering': 'イメージトレーニング','konsentrasjon': '集中力','stressmestring': 'ストレスマネジメント',
+  'kamp-og-treningsforberedelser': '試合・練習準備','motivasjon': 'モチベーション',
+  'spenningsregulering': '覚醒レベル調整','lagbygging': 'チームビルディング',
+  'hurtighet-og-spenst': 'スピード・ジャンプ力','mobilitet-bevegelighet': '柔軟性・モビリティ',
+};
+
+const labelSubj = s => SUBJ[s] || s;
+const labelCat = c => CAT[c] || c;
+const labelTech = t => t ? (TECH[t] || t) : null;
+const labelLevel = l => (LEVELS.find(x => x[0] === l) || [l, l])[1];
+
+let DATA = [];
+let currentLevel = '16-20';
+let currentSubj = 'all';
+
+const thumbSmall = url => url ? url.replace('_1920x1080', '_640x360') : '';
+
+function buildHaystack(d) {
+  return [
+    d.n,
+    labelSubj(d.s), labelCat(d.c), labelTech(d.t) || '',
+    d.s, d.c, d.t || ''
+  ].join(' ').toLowerCase();
 }
 
-function populateCat() {
-  const age = document.getElementById('sel-age').value;
-  const s = document.getElementById('sel-cat'); s.innerHTML = '';
-  Object.entries(TREE[age].cats).forEach(([k,v]) => {
-    const o = document.createElement('option'); o.value=k; o.textContent=v.label; s.appendChild(o);
-  });
-  populateSub();
-}
+function render() {
+  const q = document.getElementById('q').value.toLowerCase().trim();
+  let filtered = DATA;
+  if (currentLevel !== 'all') filtered = filtered.filter(d => d.l === currentLevel);
+  if (currentSubj !== 'all') filtered = filtered.filter(d => d.s === currentSubj);
+  if (q) filtered = filtered.filter(d => d._hay.includes(q));
 
-function populateSub() {
-  const age = document.getElementById('sel-age').value;
-  const cat = document.getElementById('sel-cat').value;
-  const s = document.getElementById('sel-sub'); s.innerHTML = '';
-  const subs = TREE[age].cats[cat].subs;
-  Object.entries(subs).forEach(([k,v]) => {
-    const o = document.createElement('option'); o.value=k; o.textContent=v.label; s.appendChild(o);
-  });
-  populateVid();
-}
+  const status = document.getElementById('status');
+  status.textContent = `${filtered.length} 件`;
 
-function populateVid() {
-  const age = document.getElementById('sel-age').value;
-  const cat = document.getElementById('sel-cat').value;
-  const sub = document.getElementById('sel-sub').value;
-  const s = document.getElementById('sel-vid'); s.innerHTML = '';
-  const vids = TREE[age].cats[cat].subs[sub].vids;
-  if (vids && vids.length) {
-    s.disabled = false;
-    vids.forEach(([k,label]) => {
-      const o = document.createElement('option'); o.value=k; o.textContent=label; s.appendChild(o);
-    });
-  } else {
-    s.disabled = true;
-    const o = document.createElement('option'); o.value=''; o.textContent='（このページは動画一覧なし）'; s.appendChild(o);
-  }
-  updateResult();
-}
-
-function updateResult() {
-  const age = document.getElementById('sel-age').value;
-  const cat = document.getElementById('sel-cat').value;
-  const sub = document.getElementById('sel-sub').value;
-  const vidSel = document.getElementById('sel-vid');
-  const vid = !vidSel.disabled ? vidSel.value : null;
-
-  const ageLabel = TREE[age].label;
-  const catLabel = TREE[age].cats[cat].label;
-  const subLabel = TREE[age].cats[cat].subs[sub].label;
-
-  let url, label;
-  if (vid) {
-    const vidEntry = (TREE[age].cats[cat].subs[sub].vids || []).find(v => v[0] === vid);
-    const vl = vidEntry ? vidEntry[1] : vid;
-    url = `${BASE}/${age}/${cat}/${sub}/${vid}`;
-    label = `${ageLabel} / ${catLabel} / ${subLabel} / ${vl}`;
-  } else {
-    url = `${BASE}/${age}/${cat}/${sub}`;
-    label = `${ageLabel} / ${catLabel} / ${subLabel}`;
-  }
-
-  document.getElementById('res-label').textContent = label;
-  document.getElementById('res-link').href = url;
-}
-
-document.getElementById('sel-age').addEventListener('change', populateCat);
-document.getElementById('sel-cat').addEventListener('change', populateSub);
-document.getElementById('sel-sub').addEventListener('change', populateVid);
-document.getElementById('sel-vid').addEventListener('change', updateResult);
-
-populateAge();
-populateCat();
-
-// --- Search ---
-const INDEX = [];
-Object.entries(TREE).forEach(([ageK, age]) => {
-  Object.entries(age.cats).forEach(([catK, cat]) => {
-    Object.entries(cat.subs).forEach(([subK, sub]) => {
-      const ageBoost = ageK === '16-20' ? 0 : ageK === '13-15' ? 1 : ageK === '10-12' ? 2 : 3;
-      if (sub.vids && sub.vids.length) {
-        sub.vids.forEach(([vidK, vidLabel]) => {
-          INDEX.push({
-            hay: `${vidLabel} ${vidK} ${sub.label} ${cat.label} ${age.label}`.toLowerCase(),
-            url: `${BASE}/${ageK}/${catK}/${subK}/${vidK}`,
-            main: vidLabel,
-            sub: `${age.label} / ${cat.label} / ${sub.label}`,
-            ageBoost,
-          });
-        });
-      } else {
-        INDEX.push({
-          hay: `${sub.label} ${subK} ${cat.label} ${age.label}`.toLowerCase(),
-          url: `${BASE}/${ageK}/${catK}/${subK}`,
-          main: sub.label,
-          sub: `${age.label} / ${cat.label}`,
-          ageBoost,
-        });
-      }
-    });
-  });
-});
-
-const searchInput = document.getElementById('search-input');
-const searchResults = document.getElementById('search-results');
-const browseDetails = document.getElementById('browse');
-
-function runSearch() {
-  const q = searchInput.value.toLowerCase().trim();
-  if (!q) {
-    searchResults.innerHTML = '';
-    browseDetails.style.display = '';
+  const grid = document.getElementById('grid');
+  const shown = filtered.slice(0, 60);
+  if (!shown.length) {
+    grid.innerHTML = '<div class="empty">該当する動画がありません</div>';
     return;
   }
-  browseDetails.style.display = 'none';
-  const hits = INDEX
-    .filter(item => item.hay.includes(q))
-    .sort((a, b) => a.ageBoost - b.ageBoost)
-    .slice(0, 25);
-  if (!hits.length) {
-    searchResults.innerHTML = '<div class="hit-empty">該当なし</div>';
-    return;
+  grid.innerHTML = shown.map((d, i) => {
+    const techLabel = labelTech(d.t);
+    const bc = [labelLevel(d.l), labelSubj(d.s), labelCat(d.c), techLabel].filter(Boolean).join(' / ');
+    const title = d.n || '';
+    return `
+      <div class="card" data-idx="${DATA.indexOf(d)}">
+        <div class="thumb-wrap">
+          <img class="thumb" src="${thumbSmall(d.th)}" loading="lazy" alt="">
+          <div class="play">▶</div>
+        </div>
+        <div class="card-body">
+          <div class="card-breadcrumb">${bc}</div>
+          <div class="card-title">${title}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  if (filtered.length > shown.length) {
+    grid.insertAdjacentHTML('beforeend', `<div class="empty">他 ${filtered.length - shown.length} 件は条件を絞ってください</div>`);
   }
-  searchResults.innerHTML = hits.map(h => `
-    <a class="hit" href="${h.url}" target="_blank" rel="noopener">
-      <div class="hit-main">${h.main}</div>
-      <div class="hit-sub">${h.sub}</div>
-    </a>
-  `).join('');
+
+  grid.querySelectorAll('.card').forEach(el => {
+    el.addEventListener('click', () => openModal(DATA[+el.dataset.idx]));
+  });
 }
 
-searchInput.addEventListener('input', runSearch);
+function openModal(d) {
+  const bc = [labelLevel(d.l), labelSubj(d.s), labelCat(d.c), labelTech(d.t)].filter(Boolean).join(' / ');
+  document.getElementById('modal-bc').textContent = bc;
+  document.getElementById('modal-title').textContent = d.n || '';
+  document.getElementById('player').innerHTML = `<iframe src="https://player.vimeo.com/video/${d.v}?autoplay=1" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+  document.getElementById('modal').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(e) {
+  if (e && e.target && !e.target.classList.contains('modal-bg') && !e.target.classList.contains('modal-close')) return;
+  document.getElementById('modal').classList.remove('show');
+  document.getElementById('player').innerHTML = '';
+  document.body.style.overflow = '';
+}
+
+function buildChips() {
+  const ageChips = document.getElementById('age-chips');
+  LEVELS.forEach(([k, label]) => {
+    const c = document.createElement('span');
+    c.className = 'chip' + (k === currentLevel ? ' active' : '');
+    c.textContent = label;
+    c.onclick = () => { currentLevel = k; document.querySelectorAll('#age-chips .chip').forEach(x => x.classList.remove('active')); c.classList.add('active'); render(); };
+    ageChips.appendChild(c);
+  });
+
+  const subjChips = document.getElementById('subj-chips');
+  const allChip = document.createElement('span');
+  allChip.className = 'chip active';
+  allChip.textContent = 'すべて';
+  allChip.onclick = () => { currentSubj = 'all'; document.querySelectorAll('#subj-chips .chip').forEach(x => x.classList.remove('active')); allChip.classList.add('active'); render(); };
+  subjChips.appendChild(allChip);
+  Object.entries(SUBJ).forEach(([k, label]) => {
+    const c = document.createElement('span');
+    c.className = 'chip';
+    c.textContent = label;
+    c.onclick = () => { currentSubj = k; document.querySelectorAll('#subj-chips .chip').forEach(x => x.classList.remove('active')); c.classList.add('active'); render(); };
+    subjChips.appendChild(c);
+  });
+}
+
+async function init() {
+  buildChips();
+  try {
+    const r = await fetch('data.json');
+    DATA = await r.json();
+    DATA.forEach(d => { d._hay = buildHaystack(d); });
+    document.getElementById('q').addEventListener('input', render);
+    render();
+  } catch (e) {
+    document.getElementById('status').textContent = 'データ読み込みエラー: ' + e.message;
+  }
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal({target: {classList: {contains: () => true}}}); });
+
+init();
 
 // --- PWA ---
 if ('serviceWorker' in navigator) {
