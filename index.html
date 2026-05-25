@@ -79,7 +79,8 @@
 </details>
 
 <script>
-const BASE = 'https://www.ovelsesbanken.no/ovelser';
+const BASE = 'https://www-ovelsesbanken-no.translate.goog/ovelser';
+const T_PARAMS = '?_x_tr_sl=no&_x_tr_tl=ja&_x_tr_hl=ja';
 
 const TREE = {
   '16-20': {
@@ -347,10 +348,10 @@ function updateResult() {
   if (vid) {
     const vidEntry = (TREE[age].cats[cat].subs[sub].vids || []).find(v => v[0] === vid);
     const vl = vidEntry ? vidEntry[1] : vid;
-    url = `${BASE}/${age}/${cat}/${sub}/${vid}`;
+    url = `${BASE}/${age}/${cat}/${sub}/${vid}${T_PARAMS}`;
     label = `${ageLabel} / ${catLabel} / ${subLabel} / ${vl}`;
   } else {
-    url = `${BASE}/${age}/${cat}/${sub}`;
+    url = `${BASE}/${age}/${cat}/${sub}${T_PARAMS}`;
     label = `${ageLabel} / ${catLabel} / ${subLabel}`;
   }
 
@@ -376,7 +377,7 @@ Object.entries(TREE).forEach(([ageK, age]) => {
         sub.vids.forEach(([vidK, vidLabel]) => {
           INDEX.push({
             hay: `${vidLabel} ${vidK} ${sub.label} ${cat.label} ${age.label}`.toLowerCase(),
-            url: `${BASE}/${ageK}/${catK}/${subK}/${vidK}`,
+            url: `${BASE}/${ageK}/${catK}/${subK}/${vidK}${T_PARAMS}`,
             main: vidLabel,
             sub: `${age.label} / ${cat.label} / ${sub.label}`,
             ageBoost,
@@ -385,7 +386,7 @@ Object.entries(TREE).forEach(([ageK, age]) => {
       } else {
         INDEX.push({
           hay: `${sub.label} ${subK} ${cat.label} ${age.label}`.toLowerCase(),
-          url: `${BASE}/${ageK}/${catK}/${subK}`,
+          url: `${BASE}/${ageK}/${catK}/${subK}${T_PARAMS}`,
           main: sub.label,
           sub: `${age.label} / ${cat.label}`,
           ageBoost,
