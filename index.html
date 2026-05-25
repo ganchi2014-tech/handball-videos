@@ -3,12 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a6bbd">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="動画ナビ">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>Øvelsesbanken 動画ナビゲーター</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 15px; background: #f8f7f4; color: #1a1a1a; padding: 1.5rem; max-width: 800px; margin: 0 auto; }
-  h1 { font-size: 18px; font-weight: 500; margin-bottom: 1.5rem; color: #1a1a1a; }
+  h1 { font-size: 18px; font-weight: 500; margin-bottom: 1rem; color: #1a1a1a; }
   label { font-size: 12px; color: #666; display: block; margin-bottom: 5px; }
+  input[type="search"] { width: 100%; padding: 12px 14px; font-size: 16px; border: 0.5px solid #ccc; border-radius: 10px; background: #fff; color: #1a1a1a; margin-bottom: 1rem; -webkit-appearance: none; }
+  input[type="search"]:focus { outline: none; border-color: #1a6bbd; }
   select { width: 100%; padding: 8px 10px; font-size: 14px; border: 0.5px solid #ccc; border-radius: 8px; background: #fff; color: #1a1a1a; appearance: none; cursor: pointer; }
   select:disabled { background: #f0f0f0; color: #999; cursor: default; }
   .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 1rem; }
@@ -18,11 +26,29 @@
   .btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
   a.open-btn { font-size: 13px; padding: 6px 12px; border-radius: 8px; border: 0.5px solid #8ab8e0; background: #fff; color: #1a6bbd; text-decoration: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
   a.open-btn:hover { background: #e8f0fa; }
+  details { margin-bottom: 1rem; }
+  details summary { font-size: 14px; color: #666; cursor: pointer; padding: 8px 0; user-select: none; list-style: none; }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before { content: '▶ '; font-size: 10px; transition: transform 0.15s; display: inline-block; }
+  details[open] summary::before { transform: rotate(90deg); }
+  #search-results { margin-bottom: 1.25rem; }
+  .hit { background: #fff; border: 0.5px solid #ddd; border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; text-decoration: none; color: inherit; display: block; }
+  .hit:hover { background: #f5f0e8; border-color: #8ab8e0; }
+  .hit .hit-main { font-size: 15px; font-weight: 500; color: #1a1a1a; margin-bottom: 3px; }
+  .hit .hit-sub { font-size: 12px; color: #666; }
+  .hit-empty { font-size: 13px; color: #999; padding: 12px 0; text-align: center; }
 </style>
 </head>
 <body>
 
 <h1>Øvelsesbanken 動画ナビゲーター</h1>
+
+<input type="search" id="search-input" placeholder="検索（例：ブロック、ジャンプシュート、フェイント）" autocomplete="off">
+
+<div id="search-results"></div>
+
+<details id="browse">
+<summary>カテゴリから探す</summary>
 
 <div class="grid">
   <div>
@@ -50,6 +76,7 @@
     <a class="open-btn" id="res-link" href="#" target="_blank">↗ 動画ページを開く</a>
   </div>
 </div>
+</details>
 
 <script>
 const BASE = 'https://www.ovelsesbanken.no/ovelser';
@@ -338,6 +365,72 @@ document.getElementById('sel-vid').addEventListener('change', updateResult);
 
 populateAge();
 populateCat();
+
+// --- Search ---
+const INDEX = [];
+Object.entries(TREE).forEach(([ageK, age]) => {
+  Object.entries(age.cats).forEach(([catK, cat]) => {
+    Object.entries(cat.subs).forEach(([subK, sub]) => {
+      const ageBoost = ageK === '16-20' ? 0 : ageK === '13-15' ? 1 : ageK === '10-12' ? 2 : 3;
+      if (sub.vids && sub.vids.length) {
+        sub.vids.forEach(([vidK, vidLabel]) => {
+          INDEX.push({
+            hay: `${vidLabel} ${vidK} ${sub.label} ${cat.label} ${age.label}`.toLowerCase(),
+            url: `${BASE}/${ageK}/${catK}/${subK}/${vidK}`,
+            main: vidLabel,
+            sub: `${age.label} / ${cat.label} / ${sub.label}`,
+            ageBoost,
+          });
+        });
+      } else {
+        INDEX.push({
+          hay: `${sub.label} ${subK} ${cat.label} ${age.label}`.toLowerCase(),
+          url: `${BASE}/${ageK}/${catK}/${subK}`,
+          main: sub.label,
+          sub: `${age.label} / ${cat.label}`,
+          ageBoost,
+        });
+      }
+    });
+  });
+});
+
+const searchInput = document.getElementById('search-input');
+const searchResults = document.getElementById('search-results');
+const browseDetails = document.getElementById('browse');
+
+function runSearch() {
+  const q = searchInput.value.toLowerCase().trim();
+  if (!q) {
+    searchResults.innerHTML = '';
+    browseDetails.style.display = '';
+    return;
+  }
+  browseDetails.style.display = 'none';
+  const hits = INDEX
+    .filter(item => item.hay.includes(q))
+    .sort((a, b) => a.ageBoost - b.ageBoost)
+    .slice(0, 25);
+  if (!hits.length) {
+    searchResults.innerHTML = '<div class="hit-empty">該当なし</div>';
+    return;
+  }
+  searchResults.innerHTML = hits.map(h => `
+    <a class="hit" href="${h.url}" target="_blank" rel="noopener">
+      <div class="hit-main">${h.main}</div>
+      <div class="hit-sub">${h.sub}</div>
+    </a>
+  `).join('');
+}
+
+searchInput.addEventListener('input', runSearch);
+
+// --- PWA ---
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
 </script>
 </body>
 </html>
