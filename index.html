@@ -133,7 +133,7 @@ const thumbSmall = url => url ? url.replace('_1920x1080', '_640x360') : '';
 
 function buildHaystack(d) {
   return [
-    d.n,
+    d.n, d.ja || '',
     labelSubj(d.s), labelCat(d.c), labelTech(d.t) || '',
     d.s, d.c, d.t || ''
   ].join(' ').toLowerCase();
@@ -158,7 +158,7 @@ function render() {
   grid.innerHTML = shown.map((d, i) => {
     const techLabel = labelTech(d.t);
     const bc = [labelLevel(d.l), labelSubj(d.s), labelCat(d.c), techLabel].filter(Boolean).join(' / ');
-    const title = d.n || '';
+    const title = d.ja || d.n || '';
     return `
       <div class="card" data-idx="${DATA.indexOf(d)}">
         <div class="thumb-wrap">
@@ -185,7 +185,12 @@ function render() {
 function openModal(d) {
   const bc = [labelLevel(d.l), labelSubj(d.s), labelCat(d.c), labelTech(d.t)].filter(Boolean).join(' / ');
   document.getElementById('modal-bc').textContent = bc;
-  document.getElementById('modal-title').textContent = d.n || '';
+  const titleEl = document.getElementById('modal-title');
+  if (d.ja) {
+    titleEl.innerHTML = `${d.ja}<div style="font-size:11px;color:#888;margin-top:4px">${d.n || ''}</div>`;
+  } else {
+    titleEl.textContent = d.n || '';
+  }
   document.getElementById('player').innerHTML = `<iframe src="https://player.vimeo.com/video/${d.v}?autoplay=1" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
   document.getElementById('modal').classList.add('show');
   document.body.style.overflow = 'hidden';
