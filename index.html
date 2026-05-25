@@ -26,25 +26,22 @@
   .btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
   a.open-btn { font-size: 13px; padding: 6px 12px; border-radius: 8px; border: 0.5px solid #8ab8e0; background: #fff; color: #1a6bbd; text-decoration: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
   a.open-btn:hover { background: #e8f0fa; }
-  a.open-btn-tr { border-color: #cbb988; color: #8a6a1a; }
-  a.open-btn-tr:hover { background: #faf3e0; }
   details { margin-bottom: 1rem; }
   details summary { font-size: 14px; color: #666; cursor: pointer; padding: 8px 0; user-select: none; list-style: none; }
   details summary::-webkit-details-marker { display: none; }
   details summary::before { content: '▶ '; font-size: 10px; transition: transform 0.15s; display: inline-block; }
   details[open] summary::before { transform: rotate(90deg); }
   #search-results { margin-bottom: 1.25rem; }
-  .hit { background: #fff; border: 0.5px solid #ddd; border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .hit-info { flex: 1; min-width: 140px; }
+  .hit { background: #fff; border: 0.5px solid #ddd; border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; text-decoration: none; color: inherit; display: block; }
+  .hit:hover { background: #f5f0e8; border-color: #8ab8e0; }
   .hit .hit-main { font-size: 15px; font-weight: 500; color: #1a1a1a; margin-bottom: 3px; }
   .hit .hit-sub { font-size: 12px; color: #666; }
-  .hit-actions { display: flex; gap: 6px; flex-shrink: 0; }
-  .hit-btn { font-size: 13px; padding: 6px 10px; border-radius: 8px; border: 0.5px solid #8ab8e0; background: #fff; color: #1a6bbd; text-decoration: none; white-space: nowrap; }
-  .hit-btn:hover { background: #e8f0fa; }
-  .hit-btn-tr { border-color: #cbb988; color: #8a6a1a; }
-  .hit-btn-tr:hover { background: #faf3e0; }
   .hit-empty { font-size: 13px; color: #999; padding: 12px 0; text-align: center; }
-  .legend { font-size: 11px; color: #888; margin-bottom: 1rem; line-height: 1.5; }
+  .tip { background: #fff8e8; border: 0.5px solid #e6d8a0; border-radius: 10px; padding: 12px 14px; margin-bottom: 1.25rem; font-size: 13px; color: #5a4a1a; line-height: 1.6; }
+  .tip-title { font-weight: 500; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
+  .tip-close { font-size: 12px; color: #8a6a1a; cursor: pointer; background: none; border: none; padding: 0; }
+  .tip ul { margin: 4px 0 0 16px; padding: 0; }
+  .tip li { margin: 2px 0; }
 </style>
 </head>
 <body>
@@ -53,7 +50,17 @@
 
 <input type="search" id="search-input" placeholder="検索（例：ブロック、ジャンプシュート、フェイント）" autocomplete="off">
 
-<div class="legend">▶ 動画 = ノルウェー語のまま動画を見る　／　🌐 翻訳 = 日本語訳で読む（動画は再生されない）</div>
+<div class="tip" id="tr-tip">
+  <div class="tip-title">
+    <span>📘 リンク先のノルウェー語を日本語にする方法</span>
+    <button class="tip-close" onclick="dismissTip()">閉じる</button>
+  </div>
+  <ul>
+    <li><b>iPhone (Safari)</b>：URL欄の左にある「<b>ぁあ</b>」をタップ → 「翻訳」 → 「日本語に翻訳」</li>
+    <li><b>Android (Chrome)</b>：メニュー（︙）→「翻訳」を選ぶ。次回からは自動で翻訳されます。</li>
+    <li><b>PC (Chrome/Edge)</b>：ページ上で右クリック → 「日本語に翻訳」</li>
+  </ul>
+</div>
 
 <div id="search-results"></div>
 
@@ -83,16 +90,13 @@
   <p class="sub">選択中</p>
   <p class="main" id="res-label">—</p>
   <div class="btn-row">
-    <a class="open-btn" id="res-link" href="#" target="_blank">▶ 動画ページ</a>
-    <a class="open-btn open-btn-tr" id="res-link-tr" href="#" target="_blank">🌐 翻訳で読む</a>
+    <a class="open-btn" id="res-link" href="#" target="_blank">↗ 動画ページを開く</a>
   </div>
 </div>
 </details>
 
 <script>
 const BASE = 'https://www.ovelsesbanken.no/ovelser';
-const BASE_TR = 'https://www-ovelsesbanken-no.translate.goog/ovelser';
-const T_PARAMS = '?_x_tr_sl=no&_x_tr_tl=ja&_x_tr_hl=ja';
 
 const TREE = {
   '16-20': {
@@ -356,20 +360,19 @@ function updateResult() {
   const catLabel = TREE[age].cats[cat].label;
   const subLabel = TREE[age].cats[cat].subs[sub].label;
 
-  let path, label;
+  let url, label;
   if (vid) {
     const vidEntry = (TREE[age].cats[cat].subs[sub].vids || []).find(v => v[0] === vid);
     const vl = vidEntry ? vidEntry[1] : vid;
-    path = `/${age}/${cat}/${sub}/${vid}`;
+    url = `${BASE}/${age}/${cat}/${sub}/${vid}`;
     label = `${ageLabel} / ${catLabel} / ${subLabel} / ${vl}`;
   } else {
-    path = `/${age}/${cat}/${sub}`;
+    url = `${BASE}/${age}/${cat}/${sub}`;
     label = `${ageLabel} / ${catLabel} / ${subLabel}`;
   }
 
   document.getElementById('res-label').textContent = label;
-  document.getElementById('res-link').href = `${BASE}${path}`;
-  document.getElementById('res-link-tr').href = `${BASE_TR}${path}${T_PARAMS}`;
+  document.getElementById('res-link').href = url;
 }
 
 document.getElementById('sel-age').addEventListener('change', populateCat);
@@ -388,22 +391,18 @@ Object.entries(TREE).forEach(([ageK, age]) => {
       const ageBoost = ageK === '16-20' ? 0 : ageK === '13-15' ? 1 : ageK === '10-12' ? 2 : 3;
       if (sub.vids && sub.vids.length) {
         sub.vids.forEach(([vidK, vidLabel]) => {
-          const p = `/${ageK}/${catK}/${subK}/${vidK}`;
           INDEX.push({
             hay: `${vidLabel} ${vidK} ${sub.label} ${cat.label} ${age.label}`.toLowerCase(),
-            url: `${BASE}${p}`,
-            urlTr: `${BASE_TR}${p}${T_PARAMS}`,
+            url: `${BASE}/${ageK}/${catK}/${subK}/${vidK}`,
             main: vidLabel,
             sub: `${age.label} / ${cat.label} / ${sub.label}`,
             ageBoost,
           });
         });
       } else {
-        const p = `/${ageK}/${catK}/${subK}`;
         INDEX.push({
           hay: `${sub.label} ${subK} ${cat.label} ${age.label}`.toLowerCase(),
-          url: `${BASE}${p}`,
-          urlTr: `${BASE_TR}${p}${T_PARAMS}`,
+          url: `${BASE}/${ageK}/${catK}/${subK}`,
           main: sub.label,
           sub: `${age.label} / ${cat.label}`,
           ageBoost,
@@ -434,20 +433,25 @@ function runSearch() {
     return;
   }
   searchResults.innerHTML = hits.map(h => `
-    <div class="hit">
-      <div class="hit-info">
-        <div class="hit-main">${h.main}</div>
-        <div class="hit-sub">${h.sub}</div>
-      </div>
-      <div class="hit-actions">
-        <a class="hit-btn" href="${h.url}" target="_blank" rel="noopener">▶ 動画</a>
-        <a class="hit-btn hit-btn-tr" href="${h.urlTr}" target="_blank" rel="noopener">🌐 翻訳</a>
-      </div>
-    </div>
+    <a class="hit" href="${h.url}" target="_blank" rel="noopener">
+      <div class="hit-main">${h.main}</div>
+      <div class="hit-sub">${h.sub}</div>
+    </a>
   `).join('');
 }
 
 searchInput.addEventListener('input', runSearch);
+
+// --- Translation tip dismissal ---
+function dismissTip() {
+  document.getElementById('tr-tip').style.display = 'none';
+  try { localStorage.setItem('tr_tip_dismissed', '1'); } catch(e) {}
+}
+try {
+  if (localStorage.getItem('tr_tip_dismissed') === '1') {
+    document.getElementById('tr-tip').style.display = 'none';
+  }
+} catch(e) {}
 
 // --- PWA ---
 if ('serviceWorker' in navigator) {
