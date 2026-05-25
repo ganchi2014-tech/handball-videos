@@ -37,11 +37,6 @@
   .hit .hit-main { font-size: 15px; font-weight: 500; color: #1a1a1a; margin-bottom: 3px; }
   .hit .hit-sub { font-size: 12px; color: #666; }
   .hit-empty { font-size: 13px; color: #999; padding: 12px 0; text-align: center; }
-  .tip { background: #fff8e8; border: 0.5px solid #e6d8a0; border-radius: 10px; padding: 12px 14px; margin-bottom: 1.25rem; font-size: 13px; color: #5a4a1a; line-height: 1.6; }
-  .tip-title { font-weight: 500; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
-  .tip-close { font-size: 12px; color: #8a6a1a; cursor: pointer; background: none; border: none; padding: 0; }
-  .tip ul { margin: 4px 0 0 16px; padding: 0; }
-  .tip li { margin: 2px 0; }
 </style>
 </head>
 <body>
@@ -49,18 +44,6 @@
 <h1>Øvelsesbanken 動画ナビゲーター</h1>
 
 <input type="search" id="search-input" placeholder="検索（例：ブロック、ジャンプシュート、フェイント）" autocomplete="off">
-
-<div class="tip" id="tr-tip">
-  <div class="tip-title">
-    <span>📘 リンク先のノルウェー語を日本語にする方法</span>
-    <button class="tip-close" onclick="dismissTip()">閉じる</button>
-  </div>
-  <ul>
-    <li><b>iPhone (Safari)</b>：URL欄の左にある「<b>ぁあ</b>」をタップ → 「翻訳」 → 「日本語に翻訳」</li>
-    <li><b>Android (Chrome)</b>：メニュー（︙）→「翻訳」を選ぶ。次回からは自動で翻訳されます。</li>
-    <li><b>PC (Chrome/Edge)</b>：ページ上で右クリック → 「日本語に翻訳」</li>
-  </ul>
-</div>
 
 <div id="search-results"></div>
 
@@ -441,17 +424,6 @@ function runSearch() {
 }
 
 searchInput.addEventListener('input', runSearch);
-
-// --- Translation tip dismissal ---
-function dismissTip() {
-  document.getElementById('tr-tip').style.display = 'none';
-  try { localStorage.setItem('tr_tip_dismissed', '1'); } catch(e) {}
-}
-try {
-  if (localStorage.getItem('tr_tip_dismissed') === '1') {
-    document.getElementById('tr-tip').style.display = 'none';
-  }
-} catch(e) {}
 
 // --- PWA ---
 if ('serviceWorker' in navigator) {
