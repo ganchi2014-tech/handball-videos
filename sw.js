@@ -1,4 +1,4 @@
-const CACHE = 'nav-v8';
+const CACHE = 'nav-v9';
 const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './data.json'];
 
 self.addEventListener('install', e => {
