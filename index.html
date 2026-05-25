@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Øvelsesbanken 動画ナビゲーター</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 15px; background: #f8f7f4; color: #1a1a1a; padding: 1.5rem; max-width: 800px; margin: 0 auto; }
+  h1 { font-size: 18px; font-weight: 500; margin-bottom: 1.5rem; color: #1a1a1a; }
+  label { font-size: 12px; color: #666; display: block; margin-bottom: 5px; }
+  select { width: 100%; padding: 8px 10px; font-size: 14px; border: 0.5px solid #ccc; border-radius: 8px; background: #fff; color: #1a1a1a; appearance: none; cursor: pointer; }
+  select:disabled { background: #f0f0f0; color: #999; cursor: default; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 1rem; }
+  .result-card { background: #f0ede8; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.25rem; border: 0.5px solid #ddd; }
+  .result-card p.sub { font-size: 12px; color: #666; margin-bottom: 5px; }
+  .result-card p.main { font-size: 15px; font-weight: 500; margin-bottom: 12px; }
+  .btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  a.open-btn { font-size: 13px; padding: 6px 12px; border-radius: 8px; border: 0.5px solid #8ab8e0; background: #fff; color: #1a6bbd; text-decoration: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+  a.open-btn:hover { background: #e8f0fa; }
+</style>
+</head>
+<body>
+
+<h1>Øvelsesbanken 動画ナビゲーター</h1>
+
+<div class="grid">
+  <div>
+    <label>年齢層</label>
+    <select id="sel-age"></select>
+  </div>
+  <div>
+    <label>カテゴリ</label>
+    <select id="sel-cat"></select>
+  </div>
+  <div>
+    <label>内容</label>
+    <select id="sel-sub"></select>
+  </div>
+  <div>
+    <label>動画</label>
+    <select id="sel-vid"></select>
+  </div>
+</div>
+
+<div class="result-card">
+  <p class="sub">選択中</p>
+  <p class="main" id="res-label">—</p>
+  <div class="btn-row">
+    <a class="open-btn" id="res-link" href="#" target="_blank">↗ 動画ページを開く</a>
+  </div>
+</div>
+
+<script>
+const BASE = 'https://www.ovelsesbanken.no/ovelser';
+
+const TREE = {
+  '16-20': {
+    label: '16〜20歳',
+    cats: {
+      forsvar: { label: '守備', subs: {
+        'teknikk': { label: '技術', vids: [
+          ['takle','タックル（ボール奪取）'],['snappe','スナップ（引っ張り）'],['finte','フェイント対応'],
+          ['blokke','ブロック'],['stenge','閉鎖（スペース封鎖）'],['sikre','カバー'],
+          ['forflytte','移動・ステップ'],['hjelpe','ヘルプDF'],['presse','プレス']
+        ]},
+        'spill-og-motspill-1-mot-1': { label: '1対1', vids: [
+          ['midtsektor','センターゾーン'],['sidesektor','サイドゾーン'],['hele-banen','全コート']
+        ]},
+        'spill-og-motspill-i-sma-grupper': { label: '小グループ', vids: [
+          ['midtsektor','センターゾーン'],['sidesektor','サイドゾーン'],['hele-banen','全コート']
+        ]},
+        'spill-og-motspill-i-store-grupper': { label: '大グループ', vids: [
+          ['midtsektor','センターゾーン'],['sidesektor','サイドゾーン'],['hele-banen','全コート']
+        ]},
+        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
+        'fysiske-forutsetninger': { label: 'フィジカル基礎', vids: null },
+      }},
+      angrep: { label: '攻撃', subs: {
+        'teknikk': { label: '技術', vids: [
+          ['ballbehandling','ボールハンドリング'],['kast-og-mottak','パス＆キャッチ'],
+          ['skudd-fra-gulvet','フロアシュート'],['skudd-fra-lufta','ジャンプシュート'],
+          ['finte','フェイント'],['innspillsteknikk','インカット技術'],
+          ['utspillsteknikk','アウトカット技術'],['oppspill','セットアップ'],
+          ['kantskudd','ウィングシュート'],['linjeskudd','ラインシュート'],
+          ['sperreteknik','スクリーン技術'],['kast-og-forflytning','パス＆ムーブ'],
+          ['overgangsspill','トランジション'],['krysningsspill','クロスプレー']
+        ]},
+        'spill-og-motspill-1-mot-1': { label: '1対1', vids: [
+          ['midtsektor','センターゾーン'],['sidesektor','サイドゾーン'],['hele-banen','全コート']
+        ]},
+        'spill-og-motspill-i-sma-grupper': { label: '小グループ', vids: [
+          ['midtsektor','センターゾーン'],['sidesektor','サイドゾーン'],['hele-banen','全コート']
+        ]},
+        'spill-og-motspill-i-store-grupper': { label: '大グループ', vids: [
+          ['midtsektor','センターゾーン'],['sidesektor','サイドゾーン'],['hele-banen','全コート']
+        ]},
+        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
+        'fysiske-forutsetninger': { label: 'フィジカル基礎', vids: null },
+      }},
+      'kontra-retur': { label: 'カウンター・リターン', subs: {
+        'teknikk': { label: '技術', vids: null },
+        'spill-og-motspill-1-mot-1': { label: '1対1', vids: [
+          ['midtsektor','センターゾーン'],['sidesektor','サイドゾーン'],['hele-banen','全コート']
+        ]},
+        'spill-og-motspill-i-sma-grupper': { label: '小グループ', vids: [
+          ['midtsektor','センターゾーン'],['sidesektor','サイドゾーン'],['hele-banen','全コート']
+        ]},
+        'spill-og-motspill-i-store-grupper': { label: '大グループ', vids: [
+          ['midtsektor','センターゾーン'],['sidesektor','サイドゾーン'],['hele-banen','全コート']
+        ]},
+        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
+        'fysiske-forutsetninger': { label: 'フィジカル基礎', vids: null },
+      }},
+      malvakt: { label: 'GK', subs: {
+        'grunnleggende-teknikk-og-taktikk': { label: '基礎技術・戦術', vids: [
+          ['distanse','距離感・ポジション'],['kant','ウィング対応'],
+          ['naerskudd','至近距離シュート対応'],['igangsetting','カウンター開始']
+        ]},
+        'kompleks-teknikk-og-taktikk': { label: '応用技術・戦術', vids: [
+          ['flerskuddovelser','連続シュート対応'],['valgovelser','判断系練習'],
+          ['spillesituasjoner-med-forsvar','DFとの連携']
+        ]},
+        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
+        'fysiske-forutsetninger': { label: 'フィジカル基礎', vids: null },
+      }},
+      fysisk: { label: 'フィジカル', subs: {
+        'trening-med-utstyr': { label: '器具あり', vids: null },
+        'trening-uten-utstyr': { label: '器具なし', vids: null },
+        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
+      }},
+      'mentalt-og-sosialt': { label: 'メンタル・理論', subs: {
+        'teori': { label: '理論', vids: [
+          ['indre-dialog','内的対話'],['selvtillit','自信'],['maalsetning','目標設定'],
+          ['visualisering','イメージトレーニング'],['konsentrasjon','集中力'],
+          ['stressmestring','ストレスマネジメント'],['kamp-og-treningsforberedelser','試合・練習準備'],
+          ['motivasjon','モチベーション'],['spenningsregulering','覚醒レベル調整'],
+          ['lagbygging','チームビルディング']
+        ]},
+      }},
+    }
+  },
+  '13-15': {
+    label: '13〜15歳',
+    cats: {
+      forsvar: { label: '守備', subs: {
+        'teknikk': { label: '技術', vids: null },
+        'spill-og-motspill-1-mot-1': { label: '1対1', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
+        'spill-og-motspill-i-sma-grupper': { label: '小グループ', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
+        'spill-og-motspill-i-store-grupper': { label: '大グループ', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
+        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
+        'fysiske-forutsetninger': { label: 'フィジカル基礎', vids: null },
+      }},
+      angrep: { label: '攻撃', subs: {
+        'teknikk': { label: '技術', vids: null },
+        'spill-og-motspill-1-mot-1': { label: '1対1', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
+        'spill-og-motspill-i-sma-grupper': { label: '小グループ', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
+        'spill-og-motspill-i-store-grupper': { label: '大グループ', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
+        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
+        'fysiske-forutsetninger': { label: 'フィジカル基礎', vids: null },
+      }},
+      'kontra-retur': { label: 'カウンター', subs: {
+        'teknikk': { label: '技術', vids: null },
+        'spill-og-motspill-1-mot-1': { label: '1対1', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
+        'spill-og-motspill-i-sma-grupper': { label: '小グループ', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
+        'spill-og-motspill-i-store-grupper': { label: '大グループ', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
+        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
+        'fysiske-forutsetninger': { label: 'フィジカル基礎', vids: null },
+      }},
+      malvakt: { label: 'GK', subs: {
+        'grunnleggende-teknikk-og-taktikk': { label: '基礎技術・戦術', vids: null },
+        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
+        'fysiske-forutsetninger': { label: 'フィジカル基礎', vids: null },
+      }},
+      fysisk: { label: 'フィジカル', subs: {
+        'trening-med-utstyr': { label: '器具あり', vids: null },
+        'trening-uten-utstyr': { label: '器具なし', vids: null },
+        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
+      }},
+      'mentalt-og-sosialt': { label: 'メンタル・理論', subs: {
+        'teori': { label: '理論', vids: null },
+        'praksis': { label: '実践', vids: null },
+      }},
+    }
+  },
+  '10-12': {
+    label: '10〜12歳',
+    cats: {
+      forsvar: { label: '守備', subs: {
+        'teknikk': { label: '技術', vids: null },
+        'spill-og-motspill-1-mot-1': { label: '1対1', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
+        'spill-og-motspill-i-sma-grupper': { label: '小グループ', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
+        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
+        'fysiske-forutsetninger': { label: 'フィジカル基礎', vids: null },
+      }},
+      angrep: { label: '攻撃', subs: {
+        'teknikk': { label: '技術', vids: null },
+        'spill-og-motspill-1-mot-1': { label: '1対1', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
+        'spill-og-motspill-i-sma-grupper': { label: '小グループ', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
+        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
+        'fysiske-forutsetninger': { label: 'フィジカル基礎', vids: null },
+      }},
+      'kontra-retur': { label: 'カウンター', subs: {
+        'teknikk': { label: '技術', vids: null },
+        'spill-og-motspill-1-mot-1': { label: '1対1', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
+        'spill-og-motspill-i-sma-grupper': { label: '小グループ', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
+        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
+        'fysiske-forutsetninger': { label: 'フィジカル基礎', vids: null },
+      }},
+      malvakt: { label: 'GK', subs: {
+        'motorikk-og-koordinasjon': { label: '運動・コーディネーション', vids: null },
+        'fysiske-forutsetninger': { label: 'フィジカル基礎', vids: null },
+      }},
+      fysisk: { label: 'フィジカル', subs: {
+        'trening-med-utstyr': { label: '器具あり', vids: null },
+        'trening-uten-utstyr': { label: '器具なし', vids: null },
+        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
+      }},
+      'mentalt-og-sosialt': { label: 'メンタル・理論', subs: {
+        'praksis': { label: '実践', vids: null },
+      }},
+    }
+  },
+  '6-9': {
+    label: '6〜9歳',
+    cats: {
+      forsvar: { label: '守備', subs: {
+        'teknikk': { label: '技術', vids: null },
+        'spill-og-motspill-1-mot-1': { label: '1対1', vids: [['midtsektor','センター'],['sidesektor','サイド'],['hele-banen','全コート']] },
+        'spill-og-motspill-i-sma-grupper': { label: '小グループ', vids: null },
+        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
+        'fysiske-forutsetninger': { label: 'フィジカル基礎', vids: null },
+      }},
+      angrep: { label: '攻撃', subs: {
+        'teknikk': { label: '技術', vids: null },
+        'spill-og-motspill-1-mot-1': { label: '1対1', vids: null },
+        'spill-og-motspill-i-sma-grupper': { label: '小グループ', vids: null },
+        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
+        'fysiske-forutsetninger': { label: 'フィジカル基礎', vids: null },
+      }},
+      'kontra-retur': { label: 'カウンター', subs: {
+        'teknikk': { label: '技術', vids: null },
+        'spill-og-motspill-1-mot-1': { label: '1対1', vids: null },
+        'spill-og-motspill-i-sma-grupper': { label: '小グループ', vids: null },
+        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
+        'fysiske-forutsetninger': { label: 'フィジカル基礎', vids: null },
+      }},
+      malvakt: { label: 'GK', subs: {
+        'motorikk-og-koordinasjon': { label: '運動・コーディネーション', vids: null },
+      }},
+      fysisk: { label: 'フィジカル', subs: {
+        'trening-med-utstyr': { label: '器具あり', vids: null },
+        'trening-uten-utstyr': { label: '器具なし', vids: null },
+        'leker-og-oppvarming': { label: 'ウォームアップ', vids: null },
+      }},
+      'mentalt-og-sosialt': { label: 'メンタル・理論', subs: {
+        'praksis': { label: '実践', vids: null },
+      }},
+    }
+  },
+};
+
+function populateAge() {
+  const s = document.getElementById('sel-age');
+  Object.entries(TREE).forEach(([k,v]) => {
+    const o = document.createElement('option'); o.value=k; o.textContent=v.label; s.appendChild(o);
+  });
+}
+
+function populateCat() {
+  const age = document.getElementById('sel-age').value;
+  const s = document.getElementById('sel-cat'); s.innerHTML = '';
+  Object.entries(TREE[age].cats).forEach(([k,v]) => {
+    const o = document.createElement('option'); o.value=k; o.textContent=v.label; s.appendChild(o);
+  });
+  populateSub();
+}
+
+function populateSub() {
+  const age = document.getElementById('sel-age').value;
+  const cat = document.getElementById('sel-cat').value;
+  const s = document.getElementById('sel-sub'); s.innerHTML = '';
+  const subs = TREE[age].cats[cat].subs;
+  Object.entries(subs).forEach(([k,v]) => {
+    const o = document.createElement('option'); o.value=k; o.textContent=v.label; s.appendChild(o);
+  });
+  populateVid();
+}
+
+function populateVid() {
+  const age = document.getElementById('sel-age').value;
+  const cat = document.getElementById('sel-cat').value;
+  const sub = document.getElementById('sel-sub').value;
+  const s = document.getElementById('sel-vid'); s.innerHTML = '';
+  const vids = TREE[age].cats[cat].subs[sub].vids;
+  if (vids && vids.length) {
+    s.disabled = false;
+    vids.forEach(([k,label]) => {
+      const o = document.createElement('option'); o.value=k; o.textContent=label; s.appendChild(o);
+    });
+  } else {
+    s.disabled = true;
+    const o = document.createElement('option'); o.value=''; o.textContent='（このページは動画一覧なし）'; s.appendChild(o);
+  }
+  updateResult();
+}
+
+function updateResult() {
+  const age = document.getElementById('sel-age').value;
+  const cat = document.getElementById('sel-cat').value;
+  const sub = document.getElementById('sel-sub').value;
+  const vidSel = document.getElementById('sel-vid');
+  const vid = !vidSel.disabled ? vidSel.value : null;
+
+  const ageLabel = TREE[age].label;
+  const catLabel = TREE[age].cats[cat].label;
+  const subLabel = TREE[age].cats[cat].subs[sub].label;
+
+  let url, label;
+  if (vid) {
+    const vidEntry = (TREE[age].cats[cat].subs[sub].vids || []).find(v => v[0] === vid);
+    const vl = vidEntry ? vidEntry[1] : vid;
+    url = `${BASE}/${age}/${cat}/${sub}/${vid}`;
+    label = `${ageLabel} / ${catLabel} / ${subLabel} / ${vl}`;
+  } else {
+    url = `${BASE}/${age}/${cat}/${sub}`;
+    label = `${ageLabel} / ${catLabel} / ${subLabel}`;
+  }
+
+  document.getElementById('res-label').textContent = label;
+  document.getElementById('res-link').href = url;
+}
+
+document.getElementById('sel-age').addEventListener('change', populateCat);
+document.getElementById('sel-cat').addEventListener('change', populateSub);
+document.getElementById('sel-sub').addEventListener('change', populateVid);
+document.getElementById('sel-vid').addEventListener('change', updateResult);
+
+populateAge();
+populateCat();
+</script>
+</body>
+</html>
